@@ -111,12 +111,22 @@ async function start(file) {
 
     const foldersInfo = getFoldersInfo(pluginsFolder);
     console.log(chalk.blue.bold(`\n📂 Folders in "plugins" folder and Total Files`));
+
+    const maxFolderWidth = 17;
+    const maxTotalWidth = 13;
+
+    console.log('╭' + '─'.repeat(maxFolderWidth) + '┬' + '─'.repeat(maxTotalWidth) + '╮');
+    console.log('│ ' + chalk.green('Folder').padEnd(maxFolderWidth) + '│ ' + chalk.yellow('Total Files').padEnd(maxTotalWidth) + '│');
+    console.log('╞' + '═'.repeat(maxFolderWidth) + '╪' + '═'.repeat(maxTotalWidth) + '╡');
+
     foldersInfo.forEach(({
         folder,
         files
     }) => {
-        console.log(chalk.cyan(`Folder: ${folder}, Total Files: ${files}`));
+        console.log('│ ' + chalk.green(folder.padEnd(maxFolderWidth)) + '│ ' + chalk.yellow(String(files).padStart(maxTotalWidth)) + '│');
     });
+
+    console.log('╰' + '─'.repeat(maxFolderWidth) + '┴' + '─'.repeat(maxTotalWidth) + '╯');
 
     console.log(chalk.blue.bold(`\n⏰ Current Time`));
     const currentTime = new Date().toLocaleString();

@@ -9,11 +9,7 @@ import {
 import {
     createRequire
 } from "module";
-import {
-    join,
-    relative
-} from 'path';
-import path from 'path';
+import * as path from 'path';
 import {
     fileURLToPath,
     pathToFileURL
@@ -181,6 +177,7 @@ const {
 } = await fetchLatestBaileysVersion();
 
 if (!pairingCode && !useMobile && !useQr && !singleToMulti) {
+    console.clear();
     const title = "OPTIONS";
     const message = "--pairing-code, --mobile, --qr, --singleauth";
     const boxWidth = 40;
@@ -193,6 +190,7 @@ if (!pairingCode && !useMobile && !useQr && !singleToMulti) {
 ├${horizontalLine}┤
 |${formatText(message, 'bgWhite', 'red')}|
 ╰${horizontalLine}╯`);
+    process.exit(0);
 }
 
 var authFolder = storeSystem.fixFileName(`${Helper.opts._[0] || ''}TaylorSession`)
@@ -288,6 +286,7 @@ store.bind(conn.ev)
 conn.isInit = false
 
 if (pairingCode && !conn.authState.creds.registered) {
+    console.clear();
     if (useMobile) conn.logger.error('\nCannot use pairing code with mobile api')
     console.log(chalk.cyan('╭──────────────────────────────────────···'));
     console.log(`📨 ${chalk.redBright('Please type your WhatsApp number')}:`);
@@ -317,6 +316,7 @@ if (pairingCode && !conn.authState.creds.registered) {
 }
 
 if (useMobile && !conn.authState.creds.registered) {
+    console.clear();
     const {
         registration
     } = conn.authState.creds || {
@@ -370,6 +370,7 @@ if (useMobile && !conn.authState.creds.registered) {
     }
 
     async function askOTP() {
+        console.clear();
         console.log(chalk.cyan('╭──────────────────────────────────────···'));
         console.log(`📨 ${chalk.redBright('What method do you want to use? "sms" or "voice"')}`);
         console.log(chalk.cyan('├──────────────────────────────────────···'));
@@ -404,13 +405,13 @@ if (opts['server'])(await import('./server.js')).default(global.conn, PORT);
 
 async function clearTmp() {
     try {
-        const tmp = [tmpdir(), join(__dirname, './tmp')];
+        const tmp = [tmpdir(), path.join(__dirname, './tmp')];
         const filenames = await Promise.all(tmp.map(async (dirname) => {
             try {
                 const files = await readdirSync(dirname);
                 return Promise.all(files.map(async (file) => {
                     try {
-                        const filePath = join(dirname, file);
+                        const filePath = path.join(dirname, file);
                         const stats = await statSync(filePath);
                         if (stats.isFile() && Date.now() - stats.mtimeMs >= 1000 * 60 * 3) {
                             await unlinkSync(filePath);
@@ -439,7 +440,7 @@ async function clearSessions(folder = './TaylorSession') {
         const filenames = await readdirSync(folder);
         const deletedFiles = await Promise.all(filenames.map(async (file) => {
             try {
-                const filePath = join(folder, file);
+                const filePath = path.join(folder, file);
                 const stats = await statSync(filePath);
                 if (stats.isFile() && Date.now() - stats.mtimeMs >= 1000 * 60 * 120 && file !== 'creds.json') {
                     await unlinkSync(filePath);
@@ -466,7 +467,7 @@ async function purgeSession() {
         await Promise.all(prekeyFiles.map(async (file) => {
             try {
                 if (file !== 'creds.json') {
-                    await unlinkSync(join(prekeyFolder, file));
+                    await unlinkSync(path.join(prekeyFolder, file));
                 }
             } catch (err) {
                 console.error(`Error unlinking ${file}: ${err.message}`);
@@ -488,7 +489,7 @@ async function purgeSessionSB() {
                 }
                 const listaDirectorios = await readdirSync(folderPath);
                 await Promise.all(listaDirectorios.map(async (filesInDir) => {
-                    const dirPath = join(folderPath, filesInDir);
+                    const dirPath = path.join(folderPath, filesInDir);
 
                     try {
                         const isDirectory = (await statSync(dirPath)).isDirectory();
@@ -497,7 +498,7 @@ async function purgeSessionSB() {
                             await Promise.all(SBprekeyFiles.map(async (fileInDir) => {
                                 try {
                                     if (fileInDir !== 'creds.json') {
-                                        await unlinkSync(join(dirPath, fileInDir));
+                                        await unlinkSync(path.join(dirPath, fileInDir));
                                     }
                                 } catch (err) {
                                     console.error(`Error unlinking ${fileInDir}: ${err.message}`);
@@ -525,7 +526,7 @@ async function purgeOldFiles() {
             const files = await readdirSync(dir);
             await Promise.all(files.map(async (file) => {
                 try {
-                    const filePath = join(dir, file);
+                    const filePath = path.join(dir, file);
                     const stats = await statSync(filePath);
                     if (stats.isFile() && stats.mtimeMs < oneHourAgo && file !== 'creds.json') {
                         await unlinkSync(filePath);
@@ -734,27 +735,26 @@ global.reloadHandler = async function(restatConn) {
     return true;
 };
 
-const pluginFolder = join(__dirname, 'plugins');
+const pluginFolder = path.resolve(__dirname, 'plugins');
 const pluginFilter = (filename) => /\.js$/.test(filename);
 const filename = (file) => file.replace(/^.*[\\\/]/, '');
 global.plugins = {};
 
 async function filesInit() {
     try {
-        const pluginsDirectory = join(__dirname, 'plugins');
-        const pattern = join(pluginsDirectory, '**/*.js');
-        const CommandsFiles = await glob.sync(pattern, {
+        const pluginsDirectory = path.resolve(__dirname, 'plugins');
+        const pattern = path.resolve(pluginsDirectory, '**/*.js');
+        const CommandsFiles = glob.sync(pattern, {
             ignore: ['**/node_modules/**']
         });
 
         const importPromises = CommandsFiles.map(async (file) => {
-            const moduleName = relative(pluginsDirectory, file);
+            const moduleName = path.join('/plugins', path.relative(pluginsDirectory, file));
 
             try {
-                const {
-                    default: module
-                } = await import(file);
-                global.plugins[moduleName] = module;
+                const module = await import(file);
+                global.plugins[moduleName] = module.default || module;
+
                 return moduleName;
             } catch (e) {
                 conn.logger.error(e);
@@ -796,7 +796,7 @@ async function filesInit() {
 
 global.reload = async (_ev, filename) => {
     if (pluginFilter(filename)) {
-        let dir = join(pluginFolder, filename);
+        let dir = path.join(pluginFolder, filename);
         if (filename in global.plugins) {
             if (existsSync(dir))
                 conn.logger.info(`re-require plugin '${filename}'`);
@@ -965,6 +965,7 @@ loadDatabase()
         return executeActions();
     })
     .then(() => {
+        console.clear();
         executeActionsSpinner.succeed('Semua proses berhasil dieksekusi.');
         executeActionsSpinner.stop();
     })

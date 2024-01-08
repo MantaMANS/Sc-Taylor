@@ -56,7 +56,6 @@ async function start(file) {
     p.on('exit', (code) => {
         isRunning = false;
         console.error(chalk.red(`🛑 Exited with code: ${code}`));
-
         if (code !== 0) {
             fs.watchFile(args[0], () => {
                 fs.unwatchFile(args[0]);
@@ -112,21 +111,25 @@ async function start(file) {
     const foldersInfo = getFoldersInfo(pluginsFolder);
     console.log(chalk.blue.bold(`\n📂 Folders in "plugins" folder and Total Files`));
 
-    const maxFolderWidth = 17;
-    const maxTotalWidth = 13;
+    const maxFolderWidth = 25;
+    const maxTotalWidth = 25;
 
-    console.log('╭' + '─'.repeat(maxFolderWidth) + '┬' + '─'.repeat(maxTotalWidth) + '╮');
-    console.log('│ ' + chalk.green('Folder').padEnd(maxFolderWidth) + '│ ' + chalk.yellow('Total Files').padEnd(maxTotalWidth) + '│');
-    console.log('╞' + '═'.repeat(maxFolderWidth) + '╪' + '═'.repeat(maxTotalWidth) + '╡');
+    foldersInfo.sort((a, b) => a.folder.localeCompare(b.folder));
 
-    foldersInfo.forEach(({
+    const tableData = foldersInfo.map(({
         folder,
         files
-    }) => {
-        console.log('│ ' + chalk.green(folder.padEnd(maxFolderWidth)) + '│ ' + chalk.yellow(String(files).padStart(maxTotalWidth)) + '│');
-    });
+    }) => ({
+        Folder: folder,
+        'Total Files': `${files} files`,
+    }));
 
-    console.log('╰' + '─'.repeat(maxFolderWidth) + '┴' + '─'.repeat(maxTotalWidth) + '╯');
+    const tableColumns = ['Folder', 'Total Files'];
+
+    console.table(tableData, tableColumns, [
+        `background-color: blue; color: white; width: ${maxFolderWidth}px; border-radius: 10px;`,
+        `background-color: green; color: white; width: ${maxTotalWidth}px; border-radius: 10px;`,
+    ]);
 
     console.log(chalk.blue.bold(`\n⏰ Current Time`));
     const currentTime = new Date().toLocaleString();
@@ -154,18 +157,27 @@ function shutdownServer() {
     console.error(chalk.red('❌ Shutting down the server due to an error.'));
     server.close(() => {
         console.log(chalk.red('🛑 Server has been shut down.'));
+        process.exit(1);
     });
 }
 
 start('main.js');
 
 process.on('unhandledRejection', () => {
-    console.error(chalk.red(`❌ Unhandled promise rejection. Script will restart...`));
-    start('main.js');
+    console.error(chalk.red(`❌ Unhandled promise rejection.`));
+    process.exit(1);
 });
 
 process.on('exit', (code) => {
     console.error(chalk.red(`🛑 Exited with code: ${code}`));
-    console.error(chalk.red(`❌ Script will restart...`));
-    start('main.js');
+    process.exit(1);
+});
+
+process.on('SIGINT', () => {
+    console.log(chalk.yellow('Received SIGINT. Stopping the execution.'));
+    process.exit(1);
+});
+
+process.on('SIGTERM', () => {
+    shutdownServer();
 });

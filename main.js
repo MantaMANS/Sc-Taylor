@@ -179,18 +179,16 @@ const {
 if (!pairingCode && !useMobile && !useQr && !singleToMulti) {
     console.clear();
     const title = "OPTIONS";
-    const message = "--pairing-code, --mobile, --qr, --singleauth";
+    const message = ["--pairing-code", "--mobile", "--qr", "--singleauth"];
+    const tableData = message.map(option => ({
+        Option: option
+    }));
+    const tableColumns = ["Option"];
     const boxWidth = 40;
-    const horizontalLine = chalk.redBright("─".repeat(boxWidth));
 
-    const formatText = (text, bgColor, textColor) => chalk[bgColor](chalk[textColor](text.padStart(boxWidth / 2 + text.length / 2).padEnd(boxWidth)));
+    console.table(tableData, tableColumns, [`background-color: red; color: white; width: ${boxWidth}px; border-radius: 10px;`]);
 
-    console.log(`╭${horizontalLine}╮
-|${formatText(title, 'bgRed', 'white')}|
-├${horizontalLine}┤
-|${formatText(message, 'bgWhite', 'red')}|
-╰${horizontalLine}╯`);
-    process.exit(0);
+    process.exit(1);
 }
 
 var authFolder = storeSystem.fixFileName(`${Helper.opts._[0] || ''}TaylorSession`)
@@ -573,20 +571,24 @@ async function connectionUpdate(update) {
             } = conn.user;
             const name = await conn.getName(jid);
             conn.user.name = name || 'Taylor';
+
             const currentTime = new Date();
             const pingStart = new Date();
-            const infoMsg = `*Bot Info:*
-   
-*Current Time:* ${currentTime}
-*Name:* ${name || 'Taylor'}
-*Tag:* @${jid.split('@')[0]}
-*Ping Speed:* ${pingStart - new Date()}ms
-*Date:* ${currentTime.toDateString()}
-*Time:* ${currentTime.toLocaleTimeString()}
-*Day:* ${currentTime.toLocaleDateString('id-ID', { weekday: 'long' })}
-*Description:* Bot ${name || 'Taylor'} is now active.`;
+            const pingSpeed = pingStart - currentTime;
+            const formattedPingSpeed = pingSpeed < 0 ? 'N/A' : `${pingSpeed}ms`;
+
+            const infoMsg = `🤖 *Bot Info* 🤖
+🕰️ *Current Time:* ${currentTime}
+👤 *Name:* *${name || 'Taylor'}*
+🏷️ *Tag:* *@${jid.split('@')[0]}*
+⚡ *Ping Speed:* *${formattedPingSpeed}*
+📅 *Date:* ${currentTime.toDateString()}
+🕒 *Time:* ${currentTime.toLocaleTimeString()}
+📆 *Day:* ${currentTime.toLocaleDateString('id-ID', { weekday: 'long' })}
+📝 *Description:* Bot *${name || 'Taylor'}* is now active.`;
+
             await conn.reply(
-                nomorown + '@s.whatsapp.net',
+                `${nomorown}@s.whatsapp.net`,
                 infoMsg,
                 null, {
                     contextInfo: {
@@ -611,12 +613,12 @@ async function connectionUpdate(update) {
 
     if (!pairingCode && !useMobile && qr !== 0 && qr !== undefined && connection === 'close') {
         conn.logger.error(chalk.yellow(`\n🚩 Koneksi ditutup, harap hapus folder ${global.authFile} dan pindai ulang kode QR`));
-        process.exit(0);
+        process.exit(1);
     }
 
     if (!pairingCode && !useMobile && useQr && qr !== 0 && qr !== undefined && connection === 'close') {
         conn.logger.info(chalk.yellow(`\n🚩ㅤPindai kode QR ini, kode QR akan kedaluwarsa dalam 60 detik.`));
-        process.exit(0);
+        process.exit(1);
     }
 
 }
@@ -777,13 +779,12 @@ async function filesInit() {
         try {
             await conn.reply(
                 nomorown + '@s.whatsapp.net',
-                '*Loaded Plugins Report:*\n' +
-                `\n*Total Plugins:* ${CommandsFiles.length}` +
-                `\n*Success:* ${successMessages.length}` +
-                `\n*Error:* ${errorMessages.length}` +
+                '🤖 *Loaded Plugins Report* 🤖\n' +
+                `🔧 *Total Plugins:* ${CommandsFiles.length}\n` +
+                `✅ *Success:* ${successMessages.length}\n` +
+                `❌ *Error:* ${errorMessages.length}\n` +
                 (errorMessages.length > 0 ?
-                    `\n  - ${errorMessages.map((error, index) => `${index + 1}. ${error.filePath}`).join('\n  - ')}` : ''
-                ),
+                    `  ❗ *Errors:* ${errorMessages.map((error, index) => `\n    ${index + 1}. ${error.filePath}`).join('')}\n` : ''),
                 null
             );
         } catch (e) {
@@ -856,7 +857,7 @@ async function FileEv(type, file) {
 }
 
 async function watchFiles() {
-    const watcher = chokidar.watch('plugins/**/*.js', {
+    const watcher = chokidar.watch(['lib/**/*.js', 'plugins/**/*.js'], {
         usePolling: true,
         interval: 100,
         awaitWriteFinish: {
@@ -977,6 +978,7 @@ loadDatabase()
         if (runSyntaxCheckSpinner) runSyntaxCheckSpinner.fail('Gagal Check Syntax File ES6.');
         if (executeActionsSpinner) executeActionsSpinner.fail('Gagal mengeksekusi aksi.');
         if (loadDBSpinner) loadDBSpinner.fail('Gagal Load Database');
+        process.exit(1);
     });
 
 Object.freeze(global.reload);
@@ -1023,8 +1025,6 @@ async function _quickTest() {
         Object.freeze(global.support = support);
     } catch (error) {
         console.error(`Error in _quickTest: ${error.message}`);
-
-
     }
 }
 
@@ -1067,11 +1067,6 @@ export const executeActions = async () => {
         }
     }
 };
-
-process.on('SIGINT', () => {
-    console.log(chalk.yellow('Received SIGINT. Stopping the execution.'));
-    process.exit(0);
-});
 
 function clockString(ms) {
     if (isNaN(ms)) return '-- Hari -- Jam -- Menit -- Detik';

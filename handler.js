@@ -1155,87 +1155,90 @@ export async function handler(chatUpdate) {
                     let user = global.db.data.users[m.sender]
                     let _chat = global.db.data.settings[this.user.jid]
                     if (
-                        name != "./plugins/Owner/owner-unbanchat.js" &&
-                        name != "./plugins/Owner/owner-exec.js" &&
-                        name != "./plugins/Owner/owner-exec2.js" &&
-                        name != "./plugins/Owner/tools-delete.js" &&
-                        name != "./plugins/Others/enable.js" &&
-                        chat?.isBanned
-                    )
-                        return
-                    if (name != "./plugins/Owner/owner-unbanuser.js" &&
-                        name != "./plugins/Owner/owner-exec.js" &&
-                        name != "./plugins/Owner/owner-exec2.js" &&
-                        user?.banned)
-                        return
-                    if (name != "./plugins/Owner/owner-exec.js" &&
-                        name != "./plugins/Owner/owner-exec2.js" &&
-                        name != "./plugins/Others/enable.js" &&
-                        (_chat?.self || _chat?.pconly || _chat?.gconly || _chat?.swonly)
-                    )
-                        return
+                        name != "/plugins/Owner/owner-unbanchat.js" &&
+                        name != "/plugins/Owner/owner-exec.js" &&
+                        name != "/plugins/Owner/owner-exec2.js" &&
+                        name != "/plugins/Owner/tools-delete.js" &&
+                        name != "/plugins/Others/enable.js" &&
+                        chat.isBanned
+                    ) {
+                        continue
+                    }
+                    if (name != "/plugins/Owner/owner-unbanuser.js" &&
+                        name != "/plugins/Owner/owner-exec.js" &&
+                        name != "/plugins/Owner/owner-exec2.js" &&
+                        user.banned) {
+                        continue
+                    }
+                    if (name != "/plugins/Owner/owner-exec.js" &&
+                        name != "/plugins/Owner/owner-exec2.js" &&
+                        name != "/plugins/Others/enable.js" &&
+                        (_chat.self || _chat.pconly || _chat.gconly || _chat.swonly)
+                    ) {
+                        continue
+                    }
                 }
                 if (plugin.rowner && plugin.owner && !(isROwner || isOwner)) { // Both Owner
-                    global.dfail("owner", m, this)
+                    fail("owner", m, this)
                     continue
                 }
                 if (plugin.rowner && !isROwner) { // Real Owner
-                    global.dfail("rowner", m, this)
+                    fail("rowner", m, this)
                     continue
                 }
                 if (plugin.owner && !isOwner) { // Number Owner
-                    global.dfail("owner", m, this)
+                    fail("owner", m, this)
                     continue
                 }
                 if (plugin.mods && !isMods) { // Moderator
-                    global.dfail("mods", m, this)
+                    fail("mods", m, this)
                     continue
                 }
                 if (plugin.premium && !isPrems) { // Premium
-                    global.dfail("premium", m, this)
+                    fail("premium", m, this)
                     continue
                 }
                 if (plugin.group && !m.isGroup) { // Group Only
-                    global.dfail("group", m, this)
+                    fail("group", m, this)
                     continue
                 } else if (plugin.botAdmin && !isBotAdmin) { // You Admin
-                    global.dfail("botAdmin", m, this)
+                    fail("botAdmin", m, this)
                     continue
                 } else if (plugin.admin && !isAdmin) { // User Admin
-                    global.dfail("admin", m, this)
+                    fail("admin", m, this)
                     continue
                 }
                 if (plugin.private && m.isGroup) { // Private Chat Only
-                    global.dfail("private", m, this)
+                    fail("private", m, this)
                     continue
                 }
                 if (plugin.register == true && _user.registered == false) { // Butuh daftar?
-                    global.dfail("unreg", m, this)
+                    fail("unreg", m, this)
                     continue
                 }
                 if (global.db.data.settings[this.user.jid].rpg) {
                     if (plugin.tags && plugin.tags.includes("rpg")) {
-                        global.dfail("rpg", m, this)
+                        fail("rpg", m, this)
                         continue
                     }
                 }
                 if ((!(isROwner || isOwner) && global.db.data.settings[this.user.jid].self) || opts["self"]) {
-                    //global.dfail("self", m, this);
+                    //fail("self", m, this);
                     continue;
                 }
 
                 if ((opts["pconly"] || global.db.data.settings[this.user.jid].pconly) && m.isGroup && m.chat.endsWith("s.whatsapp.net")) {
-                    //global.dfail("pconly", m, this);
+                    //fail("pconly", m, this);
                     continue;
                 }
 
                 if ((opts["gconly"] || global.db.data.settings[this.user.jid].gconly) && !m.isGroup && m.chat.endsWith("g.us")) {
-                    //global.dfail("gconly", m, this);
+                    //fail("gconly", m, this);
                     continue;
                 }
 
                 if ((opts["swonly"] || global.db.data.settings[this.user.jid].swonly) && m.chat !== "status@broadcast") {
-                    //global.dfail("swonly", m, this);
+                    //fail("swonly", m, this);
                     continue;
                 }
 

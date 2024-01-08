@@ -126,11 +126,14 @@ function addHttpsIfNeeded(link) {
 function formatSize(size) {
     const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'YB'];
     let i = 0;
+
     while (size >= 1024 && i < units.length - 1) {
         size /= 1024;
         i++;
     }
-    return `${size.toFixed(2)} ${units[i]}` ?? 0;
+
+    const formattedSize = (typeof size === 'number' ? size.toFixed(2) : '0').toString();
+    return `${formattedSize} ${units[i]}`;
 }
 
 function isTextContent(contentType) {

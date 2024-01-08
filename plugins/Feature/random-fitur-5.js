@@ -72,30 +72,6 @@ let handler = async (m, {
         ], m)
     }
 
-    if (command == 'whatanime') {
-        let q = m.quoted ? m.quoted : m
-        let mime = (q.msg || q).mimetype || ''
-        if (!mime) throw 'Fotonya Mana?'
-        if (!/image\/(jpe?g|png)/.test(mime)) throw `Tipe ${mime} tidak didukung!`
-        let img = await q.download?.()
-        let url = await uploadImage(img)
-
-        let f = await fetch(`https://api.trace.moe/search?url=${url}`)
-        let xc = await f.json()
-        let r = xc.result
-        let x = r.getRandom()
-        let caption = `*Anilist:* ${x.anilist}
-*Name:* ${x.filename}
-*Episode:* ${x.episode}
-*Dari:* ${x.from}
-*Ke:* ${x.to}
-*Kecocokan:* ${x.similarity}
-`
-        await conn.sendButton(m.chat, caption, wm, x.image, [
-            ['Get Video', `${usedPrefix}get ${x.video}`]
-        ], m)
-    }
-
     if (command == 'isgd') {
         if (!text) throw `Teks Mana?
 Contoh: ${usedPrefix + command} https://google.com`
@@ -191,7 +167,7 @@ ${xc}`
 
 
 }
-handler.command = handler.help = ['cdnjs', 'readqr', 'scanqr', 'animechan', 'whatanime', 'isgd', 'resmush', 'toascii', 'dlytmp3', 'dlytmp4', 'mcskin']
+handler.command = handler.help = ['cdnjs', 'readqr', 'scanqr', 'animechan', 'isgd', 'resmush', 'toascii', 'dlytmp3', 'dlytmp4', 'mcskin']
 handler.tags = ['tools']
 
 export default handler

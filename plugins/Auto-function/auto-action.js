@@ -19,5 +19,5 @@ export async function before(m) {
         } catch (error) {
             console.error(chalk.red(`Error during periodic execution: ${error.message}`));
         }
-    }, 24 * 60 * 60 * 1000); // Set interval for 24 hours
+    }, 24 * 60 * 60 * 1000);
 }

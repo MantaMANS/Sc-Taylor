@@ -909,7 +909,6 @@ export async function handler(chatUpdate) {
                 if (!("premium" in chat)) chat.premium = false
                 if (!("premiumTime" in chat)) chat.premiumTime = false
                 if (!("premnsfw" in chat)) chat.premnsfw = false
-                if (!("rpg" in chat)) chat.rpg = false
                 if (!("self" in chat)) chat.self = false
                 if (!("sBye" in chat)) chat.sBye = ""
                 if (!("sDemote" in chat)) chat.sDemote = ""
@@ -939,7 +938,6 @@ export async function handler(chatUpdate) {
                     premium: false,
                     premiumTime: false,
                     premnsfw: false,
-                    rpg: false,
                     self: false,
                     sBye: "",
                     sDemote: "",
@@ -993,7 +991,7 @@ export async function handler(chatUpdate) {
                 if (!("pconly" in settings)) settings.pconly = false
                 if (!("gconly" in settings)) settings.gconly = false
                 if (!("swonly" in settings)) settings.swonly = false
-                if (!("rpg" in settings)) settings.rpg = false
+                if (!("antirpg" in settings)) settings.antirpg = false
                 if (!("autoread" in settings)) settings.autoread = false
                 if (!("restrict" in settings)) settings.restrict = false
                 if (!("jadibot" in settings)) settings.jadibot = false
@@ -1007,7 +1005,7 @@ export async function handler(chatUpdate) {
                 pconly: false,
                 gconly: false,
                 swonly: false,
-                rpg: false,
+                antirpg: false,
                 autoread: false,
                 jadibot: false,
                 restrict: false,
@@ -1020,9 +1018,8 @@ export async function handler(chatUpdate) {
             console.error(e)
         }
 
-
-        if (typeof m.text !== "string")
-            m.text = ""
+        if (typeof m.text !== 'string')
+            m.text = ''
 
         const isROwner = [conn.decodeJid(global.conn.user.id), ...global.owner.map(([number]) => number)].map(v => v.replace(/[^0-9]/g, "") + "@s.whatsapp.net").includes(m.sender)
         const isOwner = isROwner || m.fromMe
@@ -1040,9 +1037,14 @@ export async function handler(chatUpdate) {
             }, time)
         }
 
-        if (m.isBaileys)
+        if (opts["nyimak"]) return;
+        if (!m.fromMe && opts["self"] && !isOwner && !isPrems) return;
+        if (opts["pconly"] && m.chat.endsWith("g.us")) return;
+        if (opts["gconly"] && !m.chat.endsWith("g.us")) return;
+        if (opts["swonly"] && m.chat !== "status@broadcast") return;
 
-            return
+        if (m.isBaileys)
+            return;
         m.exp += Math.ceil(Math.random() * 10)
 
         let usedPrefix
@@ -1173,7 +1175,7 @@ export async function handler(chatUpdate) {
                     if (name != "/plugins/Owner/owner-exec.js" &&
                         name != "/plugins/Owner/owner-exec2.js" &&
                         name != "/plugins/Others/enable.js" &&
-                        (_chat.self || _chat.pconly || _chat.gconly || _chat.swonly)
+                        (_chat.self ?? _chat.pconly ?? _chat.gconly ?? _chat.swonly)
                     ) {
                         continue
                     }
@@ -1216,30 +1218,15 @@ export async function handler(chatUpdate) {
                     fail("unreg", m, this)
                     continue
                 }
-                if (global.db.data.settings[this.user.jid].rpg) {
+                if (plugin.nsfw && global.db.data.chats[m.chat].nsfw) { // Nsfw
+                    fail("nsfw", m, this)
+                    continue
+                }
+                if (opts['antirpg'] && global.db.data.settings[this.user.jid].antirpg) {
                     if (plugin.tags && plugin.tags.includes("rpg")) {
                         fail("rpg", m, this)
                         continue
                     }
-                }
-                if ((!(isROwner || isOwner) && global.db.data.settings[this.user.jid].self) || opts["self"]) {
-                    //fail("self", m, this);
-                    continue;
-                }
-
-                if ((opts["pconly"] || global.db.data.settings[this.user.jid].pconly) && m.isGroup && m.chat.endsWith("s.whatsapp.net")) {
-                    //fail("pconly", m, this);
-                    continue;
-                }
-
-                if ((opts["gconly"] || global.db.data.settings[this.user.jid].gconly) && !m.isGroup && m.chat.endsWith("g.us")) {
-                    //fail("gconly", m, this);
-                    continue;
-                }
-
-                if ((opts["swonly"] || global.db.data.settings[this.user.jid].swonly) && m.chat !== "status@broadcast") {
-                    //fail("swonly", m, this);
-                    continue;
                 }
 
                 m.isCommand = true

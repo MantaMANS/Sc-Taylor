@@ -177,37 +177,13 @@ async function QuotlyImg(a, b, c, d, tema, reply) {
     let json;
 
     try {
-        json = await axios.post("https://quote-api.rippanteq7.repl.co/generate", obj, {
+        json = await axios.post("https://bot.lyo.su/quote/generate", obj, {
             headers: {
                 "Content-Type": "application/json"
             }
         });
     } catch (e) {
-        try {
-            json = await axios.post("https://quote-api-1.jigarvarma2005.repl.co/generate", obj, {
-                headers: {
-                    "Content-Type": "application/json"
-                }
-            });
-        } catch (e) {
-            try {
-                json = await axios.post("https://qc-api.rizzlogy.repl.co/generate", obj, {
-                    headers: {
-                        "Content-Type": "application/json"
-                    }
-                });
-            } catch (e) {
-                try {
-                    json = await axios.post("https://quote-api.ghost19ui.repl.co/generate", obj, {
-                        headers: {
-                            "Content-Type": "application/json"
-                        }
-                    });
-                } catch (e) {
-                    return e;
-                }
-            }
-        }
+        return e;
     }
 
     const results = json.data.result.image;

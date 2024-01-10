@@ -7,11 +7,16 @@ const handler = async (m, {
     isAdmin,
     isROwner
 }) => {
-    const features = ["autodlTiktok", "autodlFacebook", "autodlInstagram", "autodlYoutube", "antibot", "antiFoto", "antiVideo", "antiAudio", "antiCall", "antiDelete", "antiLink", "antiLinkFb", "antiLinkHttp", "antiLinkIg", "antiLinkTel", "antiLinkTik", "antiLinkWa", "antiLinkYt", "antiSatir", "antiSticker", "antiVirtex", "antiToxic", "antibule", "autoBio", "autoChat", "autoAi", "autoGpt", "autochatGpt", "autoJoin", "autoPresence", "autoReply", "autoSticker", "autoVn", "viewStory", "bcjoin", "detect", "getmsg", "nsfw", "antiSpam", "simi", "alicia", "gptvoice", "characterai", "updateAnime", "updateAnimeNews", "viewonce", "welcome", "autoread", "gconly", "nyimak", "pconly", "self", "rpg", "swonly", "lastAnime", "latestNews"];
+    const features = ["autodlTiktok", "autodlFacebook", "autodlInstagram", "autodlYoutube", "antibot", "antiFoto", "antiVideo", "antiAudio", "antiCall", "antiDelete", "antiLink", "antiLinkFb", "antiLinkHttp", "antiLinkIg", "antiLinkTel", "antiLinkTik", "antiLinkWa", "antiLinkYt", "antiSatir", "antiSticker", "antiVirtex", "antiToxic", "antibule", "autoBio", "autoChat", "autoAi", "autoGpt", "autochatGpt", "autoJoin", "autoPresence", "autoReply", "autoSticker", "autoVn", "viewStory", "bcjoin", "detect", "getmsg", "nsfw", "antiSpam", "simi", "alicia", "gptvoice", "characterai", "updateAnime", "updateAnimeNews", "viewonce", "welcome", "autoread", "gconly", "nyimak", "pconly", "self", "antirpg", "swonly", "lastAnime", "latestNews"];
     const activeFeatures = ["antiDelete", "detect", "getmsg", "lastAnime", "latestNews", "welcome"];
 
     const result = features.map((f, i) => {
-        const isActive = activeFeatures.includes(f) ? !global.db.data.chats[m.chat][f] : global.db.data.chats[m.chat][f];
+        let isActive
+        if (["self", "pconly", "gconly", "swonly", "antirpg", "autoread", "jadibot", "restrict", "autorestart", "autorestart", "antibot"].includes(f)) {
+            isActive = activeFeatures.includes(f) ? !global.db.data.settings[conn.user.jid][f] : global.db.data.settings[conn.user.jid][f];
+        } else {
+            isActive = activeFeatures.includes(f) ? !global.db.data.chats[m.chat][f] : global.db.data.chats[m.chat][f];
+        }
         return `${(i + 1).toString().padEnd(2)}. ${f.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()).padEnd(18)} ${isActive ? "ON" : "OFF"}`;
     }).join('\n').trimEnd();
 
@@ -34,8 +39,9 @@ const handler = async (m, {
         if (["autoChat"].includes(featureName)) {
             conn.autochat = conn.autochat || {};
             conn.autochat.status = isEnable;
-        } else if (["self", "pconly", "gconly", "swonly", "rpg", "autoread", "jadibot", "restrict", "autorestart", "autorestart", "antibot"].includes(featureName)) {
+        } else if (["self", "pconly", "gconly", "swonly", "antirpg", "autoread", "jadibot", "restrict", "autorestart", "autorestart", "antibot"].includes(featureName)) {
             _chat[featureName] = isEnable;
+            global.opts[featureName] = isEnable;
         } else {
             chat[featureName] = isEnable;
         }

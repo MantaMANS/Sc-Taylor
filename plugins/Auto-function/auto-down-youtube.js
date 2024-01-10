@@ -1,37 +1,43 @@
 import {
     youtubedl,
     youtubedlv2
-} from "@bochilteam/scraper"
-let limit = 80
+} from "@bochilteam/scraper";
+
+const limit = 80;
 
 export async function before(m) {
     const regex = /^https?:\/\/(www\.)?youtube\.com\/watch\?v=[a-zA-Z0-9_-]{11}$/;
-    const matches = (m.text.trim()).match(regex);
+    const matches = m.text.trim().match(regex);
     const chat = global.db.data.chats[m.chat];
     const spas = "                ";
-    if (!matches && !chat.autodlYoutube) return false;
+
+    if (!matches || !matches[0] || chat.autodlYoutube !== true) return;
+
     await m.reply(wait);
 
     try {
-        let q = "360p"
-        let v = matches[0]
-        const yt = await youtubedl(v).catch(async () => await youtubedlv2(v))
-        const dl_url = await yt.video[q].download()
-        const title = await yt.title
-        const size = await yt.video[q].fileSizeH
+        const q = "360p";
+        const v = matches[0];
+        const yt = await youtubedl(v).catch(async () => await youtubedlv2(v));
+        const dl_url = await yt.video[q].download();
+        const title = await yt.title;
+        const size = await yt.video[q].fileSizeH;
 
+        if (size.split("MB")[0] >= limit) {
+            return m.reply(` ≡  *Youtube Downloader*\n\n▢ *⚖️Size* : ${size}\n▢ *🎞️quality* : ${q}\n\n▢ _The file exceeds the download limit_ *+${limit} MB*`);
+        }
 
-        if (size.split("MB")[0] >= limit) return m.reply(` ≡  *Youtube Downloader*\n\n▢ *⚖️Size* : ${size}\n▢ *🎞️quality* : ${q}\n\n▢ _The file exceeds the download limit_ *+${limit} MB*`)
-        let captvid = `
+        const captvid = `
  ≡  *Youtube Downloader*
   
 ▢ *📌Títle* : ${title}
 ▢ *📟 Ext* : mp4
 ▢ *🎞️Quality* : ${q}
 ▢ *⚖️Size* : ${size}
-`.trim()
-        let dls = "Downloading audio succes"
-        let doc = {
+`.trim();
+
+        const dls = "Downloading audio succes";
+        const doc = {
             video: {
                 url: dl_url
             },
@@ -48,14 +54,12 @@ export async function before(m) {
                     thumbnail: await (await this.getFile(yt.thumbnail)).data
                 }
             }
-        }
+        };
 
         await this.sendMessage(m.chat, doc, {
             quoted: m
-        })
-    } catch (e) {
-        await m.reply(eror)
-    }
-
+        });
+    } catch (e) {}
 }
-export const disabled = false
+
+export const disabled = false;

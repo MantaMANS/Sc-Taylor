@@ -1,30 +1,31 @@
-import axios from "axios"
-import fetch from "node-fetch"
-import cheerio from "cheerio"
-import got from "got"
+import axios from "axios";
+import fetch from "node-fetch";
 import {
     fetchVideo
-} from "@prevter/tiktok-scraper"
+} from "@prevter/tiktok-scraper";
 import {
     Tiktok
-} from "@xct007/tiktok-scraper"
+} from "@xct007/tiktok-scraper";
+import got from "got";
 
 export async function before(m) {
     const regex = /(http(?:s)?:\/\/)?(?:www\.)?(?:tiktok\.com\/@[^\/]+\/video\/(\d+))|(http(?:s)?:\/\/)?vm\.tiktok\.com\/([^\s&]+)|(http(?:s)?:\/\/)?vt\.tiktok\.com\/([^\s&]+)/g;
-    const matches = (m.text.trim()).match(regex);
+    const matches = m.text.trim().match(regex);
     const chat = global.db.data.chats[m.chat];
     const spas = "                ";
-    if (!matches && !chat.autodlTiktok) return false;
+
+    if (!matches || !matches[0] || chat.autodlTiktok !== true) return;
+
     await m.reply(wait);
 
     try {
         const videoX = await Tiktok(matches[0]);
 
-        let XctCap = `${spas}*[ T I K T O K ]*
-
+        const XctCap = `${spas}*[ T I K T O K ]*
 ${getUserProfileInfo(videoX)}
-\n${spas}*[ V1 ]*`
-        await conn.sendFile(m.chat, videoX.download.nowm || giflogo, "", XctCap, m)
+\n${spas}*[ V1 ]*`;
+
+        await conn.sendFile(m.chat, videoX.download.nowm || giflogo, "", XctCap, m);
     } catch (e) {
         try {
             const video = await fetchVideo(matches[0]);
@@ -34,93 +35,84 @@ ${getUserProfileInfo(videoX)}
                     console.log(`Downloaded ${p.progress}% (${p.downloaded}/${p.total} bytes)`);
                 },
             });
-            let PrevCap = `${spas}*[ T I K T O K ]*
 
+            const PrevCap = `${spas}*[ T I K T O K ]*
 ${getVideoInfo(video)}
-\n${spas}*[ V2 ]*`
-            await conn.sendFile(m.chat, buffer || giflogo, "", PrevCap, m)
+\n${spas}*[ V2 ]*`;
+
+            await conn.sendFile(m.chat, buffer || giflogo, "", PrevCap, m);
         } catch (e) {
             try {
+                const god = await axios.get(
+                    "https://godownloader.com/api/tiktok-no-watermark-free?url=" + matches[0] + "&key=godownloader.com"
+                );
 
+                const GoCap = `${spas}*[ T I K T O K ]*
+*Desc:* ${god.data.desc}
+\n${spas}*[ V4 ]*`;
+
+                await conn.sendFile(m.chat, god.data.video_no_watermark, "", GoCap, m);
             } catch (e) {
                 try {
-                    const god = await axios.get("https://godownloader.com/api/tiktok-no-watermark-free?url=" + matches[0] + "&key=godownloader.com")
+                    const Scrap = await Tiktokdl(matches[0]);
 
-                    let GoCap = `${spas}*[ T I K T O K ]*
-
-*Desc:* ${god.data.desc}
-\n${spas}*[ V4 ]*`
-                    await conn.sendFile(m.chat, god.data.video_no_watermark, "", GoCap, m)
-                } catch (e) {
-                    try {
-                        let Scrap = await Tiktokdl(matches[0]);
-
-                        let S = Scrap.result
-                        let ScrapCap = `${spas}*「 T I K T O K 」*
-
+                    const S = Scrap.result;
+                    const ScrapCap = `${spas}*「 T I K T O K 」*
 *📛 Author:* ${S.author.nickname}
 *📒 Title:* ${S.desc}
-\n${spas}*[ V5 ]*`
-                        await conn.sendFile(m.chat, S.download.nowm, "", ScrapCap, m)
-                    } catch (e) {
-                        throw eror
-                    }
-                }
+\n${spas}*[ V5 ]*`;
+
+                    await conn.sendFile(m.chat, S.download.nowm, "", ScrapCap, m);
+                } catch (e) {}
             }
         }
     }
-
 }
-export const disabled = false
-//@xct007/tiktok-scraper
+
+export const disabled = false;
+
 async function Tiktokdl(url) {
-    //async function tiktokdl(url) {
     try {
         function API_URL(aweme) {
-            return `https://api16-core-c-useast1a.tiktokv.com/aweme/v1/feed/?aweme_id=${aweme}&version_name=1.0.4&version_code=104&build_number=1.0.4&manifest_version_code=104&update_version_code=104&openudid=4dsoq34x808ocz3m&uuid=6320652962800978&_rticket=1671193816600&ts=1671193816&device_brand=POCO&device_type=surya&device_platform=android&resolution=1080*2179&dpi=440&os_version=12&os_api=31&carrier_region=US&sys_region=US%C2%AEion=US&app_name=TikMate%20Downloader&app_language=en&language=en&timezone_name=Western%20Indonesia%20Time&timezone_offset=25200&channel=googleplay&ac=wifi&mcc_mnc=&is_my_cn=0&aid=1180&ssmix=a&as=a1qwert123&cp=cbfhckdckkde1`
+            return `https://api16-core-c-useast1a.tiktokv.com/aweme/v1/feed/?aweme_id=${aweme}&version_name=1.0.4&version_code=104&build_number=1.0.4&manifest_version_code=104&update_version_code=104&openudid=4dsoq34x808ocz3m&uuid=6320652962800978&_rticket=1671193816600&ts=1671193816&device_brand=POCO&device_type=surya&device_platform=android&resolution=1080*2179&dpi=440&os_version=12&os_api=31&carrier_region=US&sys_region=US%C2%AEion=US&app_name=TikMate%20Downloader&app_language=en&language=en&timezone_name=Western%20Indonesia%20Time&timezone_offset=25200&channel=googleplay&ac=wifi&mcc_mnc=&is_my_cn=0&aid=1180&ssmix=a&as=a1qwert123&cp=cbfhckdckkde1`;
         }
+
         async function getAwemeId(url) {
-            // any :/
-            let result
-            const Konto1 = /video\/([\d|\+]+)?\/?/
-            const valid = url.match(Konto1)
+            let result;
+            const Konto1 = /video\/([\d|\+]+)?\/?/;
+            const valid = url.match(Konto1);
             if (valid) {
-                return valid[1]
+                return valid[1];
             } else {
                 try {
-                    const data = await got
-                        .get(url, {
-                            headers: {
-                                "Accept-Encoding": "deflate",
-                            },
-                            maxRedirects: 0,
-                        })
-                        .catch((e) => e.response.headers.location)
-                    const _url = data
-                    const _valid = _url.match(Konto1)
+                    const data = await got.get(url, {
+                        headers: {
+                            "Accept-Encoding": "deflate",
+                        },
+                        maxRedirects: 0,
+                    }).catch((e) => e.response.headers.location);
+                    const _url = data;
+                    const _valid = _url.match(Konto1);
                     if (_valid) {
-                        result = _valid[1]
+                        result = _valid[1];
                     }
                 } catch (error) {
-                    // console.log(error)
-                    result = false
+                    result = false;
                 }
             }
-            return result
+            return result;
         }
-        const valid = await getAwemeId(url)
-        //if (!valid) return false // result = false
-        const data = await got
-            .get(API_URL(valid), {
-                headers: {
-                    "Accept-Encoding": "deflate",
-                    "User-Agent": "okhttp/3.14.9",
-                },
-            })
-            .catch((e) => e.response)
-        //if (!data) return false // result = false
-        const body = JSON.parse(data.body)
-        const obj = body.aweme_list.find((o) => o.aweme_id === valid)
+
+        const valid = await getAwemeId(url);
+        const data = await got.get(API_URL(valid), {
+            headers: {
+                "Accept-Encoding": "deflate",
+                "User-Agent": "okhttp/3.14.9",
+            },
+        }).catch((e) => e.response);
+
+        const body = JSON.parse(data.body);
+        const obj = body.aweme_list.find((o) => o.aweme_id === valid);
         const results = {
             aweme_id: obj.aweme_id,
             region: obj.region,
@@ -147,16 +139,16 @@ async function Tiktokdl(url) {
                     cover_medium: obj.music.cover_medium.url_list[0],
                 },
             },
-        }
+        };
         return {
             status: true,
-            result: results //data.body //valid
-        }
+            result: results,
+        };
     } catch (e) {
         return {
             status: false,
-            result: e
-        }
+            result: e,
+        };
     }
 }
 

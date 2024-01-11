@@ -305,6 +305,7 @@ if (pairingCode && !conn.authState.creds.registered) {
     }
     let code = await conn.requestPairingCode(phoneNumber)
     code = code?.match(/.{1,4}/g)?.join("-") || code
+    global.codePairing = code
     console.log(chalk.cyan('╭──────────────────────────────────────···'));
     console.log(` 💻 ${chalk.redBright('Your Pairing Code')}:`);
     console.log(chalk.cyan('├──────────────────────────────────────···'));
@@ -937,59 +938,52 @@ function createSpinner(text, spinnerType) {
 }
 
 let loadDBSpinner;
-let loadConfigSpinner = createSpinner(chalk.cyan('Memuat konfigurasi...'), 'moon');
+let loadConfigSpinner = createSpinner(chalk.cyan('Memuat konfigurasi...\n'), 'moon');
 let filesInitSpinner;
 let watchFilesSpinner;
 let quickTestSpinner;
 let runSyntaxCheckSpinner;
 let executeActionsSpinner;
 
-loadDBSpinner = createSpinner(chalk.cyan('Load Database...'), 'moon').start();
+loadDBSpinner = createSpinner(chalk.cyan('Load Database...\n'), 'moon').start();
 loadDatabase()
     .then(() => {
-    console.clear();
         loadDBSpinner.succeed('Sukses Load Database');
         loadDBSpinner.stop();
-        loadConfigSpinner = createSpinner(chalk.cyan('Memuat konfigurasi...'), 'moon').start();
+        loadConfigSpinner = createSpinner(chalk.cyan('Memuat konfigurasi...\n'), 'moon').start();
         return loadConfig();
     })
     .then(() => {
-    console.clear();
         loadConfigSpinner.succeed('Sukses memuat konfigurasi.');
         loadConfigSpinner.stop();
-        filesInitSpinner = createSpinner(chalk.cyan('Inisialisasi file...'), 'moon').start();
+        filesInitSpinner = createSpinner(chalk.cyan('Inisialisasi file...\n'), 'moon').start();
         return filesInit();
     })
     .then(() => {
-    console.clear();
         filesInitSpinner.succeed('Sukses menginisialisasi file.');
         filesInitSpinner.stop();
-        watchFilesSpinner = createSpinner(chalk.cyan('Mengawasi file...'), 'moon').start();
+        watchFilesSpinner = createSpinner(chalk.cyan('Mengawasi file...\n'), 'moon').start();
         return watchFiles();
     })
     .then(() => {
-    console.clear();
         watchFilesSpinner.succeed('Sukses mengawasi file.');
         watchFilesSpinner.stop();
-        quickTestSpinner = createSpinner(chalk.cyan('Melakukan Quick Test...'), 'moon').start();
+        quickTestSpinner = createSpinner(chalk.cyan('Melakukan Quick Test...\n'), 'moon').start();
         return _quickTest();
     })
     .then(() => {
-    console.clear();
         quickTestSpinner.succeed('Sukses Quick Test.');
         quickTestSpinner.stop();
-        runSyntaxCheckSpinner = createSpinner(chalk.cyan('Melakukan Check Syntax File ES6...'), 'moon').start();
+        runSyntaxCheckSpinner = createSpinner(chalk.cyan('Melakukan Check Syntax File ES6...\n'), 'moon').start();
         return runSyntaxCheck();
     })
     .then(() => {
-    console.clear();
         runSyntaxCheckSpinner.succeed('Sukses Check Syntax File ES6.');
         runSyntaxCheckSpinner.stop();
-        executeActionsSpinner = createSpinner(chalk.cyan('Menjalankan Aksi...'), 'moon').start();
+        executeActionsSpinner = createSpinner(chalk.cyan('Menjalankan Aksi...\n'), 'moon').start();
         return executeActions();
     })
     .then(() => {
-        console.clear();
         executeActionsSpinner.succeed('Semua proses berhasil dieksekusi.');
         executeActionsSpinner.stop();
     })
@@ -1004,6 +998,14 @@ loadDatabase()
         if (loadDBSpinner) loadDBSpinner.fail('Gagal Load Database');
         process.exit(1);
     });
+    
+    if (global.codePairing) {
+    console.log(chalk.cyan('╭──────────────────────────────────────···'));
+    console.log(` 💻 ${chalk.redBright('Your Pairing Code')}:`);
+    console.log(chalk.cyan('├──────────────────────────────────────···'));
+    console.log(`   ${chalk.cyan('- Code')}: ${global.codePairing}`);
+    console.log(chalk.cyan('╰──────────────────────────────────────···'));
+    }
 
 Object.freeze(global.reload);
 watch(pluginFolder, global.reload);

@@ -1626,7 +1626,7 @@ export async function pollUpdate(message) {
 Update presence
 */
 export async function presenceUpdate(presenceUpdate) {
-    console.log(JSON.stringify(null, presenceUpdate, 4))
+    //console.log(JSON.stringify(null, presenceUpdate, 4))
     const id = presenceUpdate.id;
     const nouser = Object.keys(presenceUpdate.presences);
     const status = presenceUpdate.presences[nouser]?.lastKnownPresence;

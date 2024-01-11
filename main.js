@@ -418,7 +418,7 @@ async function clearTmp() {
                         }
                     } catch (err) {
                         console.error(`Error processing ${file}: ${err.message}`);
-                        return null;
+                        
                     }
                 }));
             } catch (err) {
@@ -445,10 +445,10 @@ async function clearSessions(folder = './TaylorSession') {
                     console.log('Deleted session:', filePath);
                     return filePath;
                 }
-                return null;
+                
             } catch (err) {
                 console.error(`Error processing ${file}: ${err.message}`);
-                return null;
+                
             }
         }));
         return deletedFiles.filter((file) => file !== null);
@@ -542,6 +542,7 @@ async function purgeOldFiles() {
     }
 }
 
+global.connectionAttempts = 0
 async function connectionUpdate(update) {
     const {
         connection,
@@ -551,19 +552,24 @@ async function connectionUpdate(update) {
         isOnline,
         receivedPendingNotifications
     } = update;
-    global.stopped = connection;
     if (isNewLogin) conn.isInit = true;
     const code = lastDisconnect?.error?.output?.statusCode || lastDisconnect?.error?.output?.payload?.statusCode;
     if (code && code !== DisconnectReason.loggedOut && conn?.ws.socket == null) {
         conn.logger.info(await global.reloadHandler(true).catch(console.error));
     }
     if (global.db.data == null) loadDatabase();
-
+    
     if (connection === 'connecting') {
-        console.log(
-            chalk.redBright('⚡ Mengaktifkan Bot, Mohon tunggu sebentar...')
-        );
+    global.connectionAttempts++
+    console.log(chalk.redBright('⚡ Mengaktifkan Bot, Mohon tunggu sebentar...'));
+
+    if (global.connectionAttempts >= 5) {
+        console.clear();
+        console.log(chalk.redBright('Tidak bisa terhubung. Kemungkinan akun Anda di banned.'));
+        process.exit(1);
     }
+}
+
     if (connection === 'open') {
         try {
             const {
@@ -597,26 +603,33 @@ async function connectionUpdate(update) {
                 }
             );
         } catch (e) {
+        console.clear();
             console.log('Bot is now active.');
         }
+        console.clear();
         conn.logger.info(chalk.yellow('\n🚩 R E A D Y'));
     }
     if (isOnline == true) {
+    console.clear();
         conn.logger.info(chalk.green('Status Aktif'));
     }
     if (isOnline == false) {
+    console.clear();
         conn.logger.error(chalk.red('Status Mati'));
     }
     if (receivedPendingNotifications) {
+    console.clear();
         conn.logger.warn(chalk.yellow('Menunggu Pesan Baru'));
     }
 
     if (!pairingCode && !useMobile && qr !== 0 && qr !== undefined && connection === 'close') {
+    console.clear();
         conn.logger.error(chalk.yellow(`\n🚩 Koneksi ditutup, harap hapus folder ${global.authFile} dan pindai ulang kode QR`));
         process.exit(1);
     }
 
     if (!pairingCode && !useMobile && useQr && qr !== 0 && qr !== undefined && connection === 'close') {
+    console.clear();
         conn.logger.info(chalk.yellow(`\n🚩ㅤPindai kode QR ini, kode QR akan kedaluwarsa dalam 60 detik.`));
         process.exit(1);
     }
@@ -627,6 +640,7 @@ global.loggedErrors = global.loggedErrors || new Set();
 
 process.on('uncaughtException', err => {
     if (!global.loggedErrors.has(err)) {
+    console.clear();
         console.error(chalk.red.bold('Uncaught Exception:'), err);
         global.loggedErrors.add(err);
     }
@@ -634,6 +648,7 @@ process.on('uncaughtException', err => {
 
 process.on('rejectionHandled', promise => {
     if (!global.loggedErrors.has(promise)) {
+    console.clear();
         console.error(chalk.red.bold('Rejection Handled:'), promise);
         global.loggedErrors.add(promise);
     }
@@ -643,6 +658,7 @@ process.on('warning', warning => console.warn(chalk.yellow.bold('Warning:'), war
 
 process.on('unhandledRejection', err => {
     if (!global.loggedErrors.has(err)) {
+    console.clear();
         console.error(chalk.red.bold('Unhandled Rejection:'), err);
         global.loggedErrors.add(err);
     }
@@ -788,6 +804,7 @@ async function filesInit() {
                 null
             );
         } catch (e) {
+        console.clear();
             console.log('Bot loaded plugins.');
         }
     } catch (e) {
@@ -930,36 +947,42 @@ let executeActionsSpinner;
 loadDBSpinner = createSpinner(chalk.cyan('Load Database...'), 'moon').start();
 loadDatabase()
     .then(() => {
+    console.clear();
         loadDBSpinner.succeed('Sukses Load Database');
         loadDBSpinner.stop();
         loadConfigSpinner = createSpinner(chalk.cyan('Memuat konfigurasi...'), 'moon').start();
         return loadConfig();
     })
     .then(() => {
+    console.clear();
         loadConfigSpinner.succeed('Sukses memuat konfigurasi.');
         loadConfigSpinner.stop();
         filesInitSpinner = createSpinner(chalk.cyan('Inisialisasi file...'), 'moon').start();
         return filesInit();
     })
     .then(() => {
+    console.clear();
         filesInitSpinner.succeed('Sukses menginisialisasi file.');
         filesInitSpinner.stop();
         watchFilesSpinner = createSpinner(chalk.cyan('Mengawasi file...'), 'moon').start();
         return watchFiles();
     })
     .then(() => {
+    console.clear();
         watchFilesSpinner.succeed('Sukses mengawasi file.');
         watchFilesSpinner.stop();
         quickTestSpinner = createSpinner(chalk.cyan('Melakukan Quick Test...'), 'moon').start();
         return _quickTest();
     })
     .then(() => {
+    console.clear();
         quickTestSpinner.succeed('Sukses Quick Test.');
         quickTestSpinner.stop();
         runSyntaxCheckSpinner = createSpinner(chalk.cyan('Melakukan Check Syntax File ES6...'), 'moon').start();
         return runSyntaxCheck();
     })
     .then(() => {
+    console.clear();
         runSyntaxCheckSpinner.succeed('Sukses Check Syntax File ES6.');
         runSyntaxCheckSpinner.stop();
         executeActionsSpinner = createSpinner(chalk.cyan('Menjalankan Aksi...'), 'moon').start();
@@ -971,6 +994,7 @@ loadDatabase()
         executeActionsSpinner.stop();
     })
     .catch((error) => {
+    console.clear();
         console.error(chalk.red(`Error saat mengeksekusi aksi: ${error.message}`));
         if (filesInitSpinner) filesInitSpinner.fail('Gagal menginisialisasi file.');
         if (watchFilesSpinner) watchFilesSpinner.fail('Gagal mengawasi file.');
